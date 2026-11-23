@@ -128,8 +128,7 @@
 
   <div id="tv-frame">
     <iframe id="tv-screen"
-      src="https://youtube-nocookie.com"
-      referrerpolicy="strict-origin-when-cross-origin"
+      src="https://youtube.com"
       allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
@@ -198,7 +197,7 @@
       const muteParam = isMuted ? 1 : 0;
 
       document.getElementById('tv-screen').src =
-        `https://youtube-nocookie.com{current.id}?autoplay=1&mute=${muteParam}&controls=0&disablekb=1&rel=0`;
+        `https://youtube.com{current.id}?autoplay=1&mute=${muteParam}&controls=0&disablekb=1&rel=0`;
 
       document.getElementById('song-artist').innerText = current.artist;
       document.getElementById('song-title').innerText = current.title;
