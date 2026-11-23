@@ -31,18 +31,12 @@
       overflow: hidden;
     }
 
+    /* Direct HTML5 video with NO controls = true unskippable Live TV */
     #tv-screen {
       width: 100%;
-      height: 114%;
-      margin-top: -4%;
-      border: none;
-    }
-
-    #tv-shield {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      background: transparent;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
     }
 
     #crt-scanlines {
@@ -135,78 +129,55 @@
 <body>
 
   <div id="tv-frame">
-    <iframe id="tv-screen"
-      src="https://youtube.com"
-      allow="autoplay; encrypted-media"
-      allowfullscreen>
-    </iframe>
-    <div id="tv-shield"></div>
+    <video id="tv-screen" autoplay muted playsinline onended="playNext()"></video>
     <div id="crt-scanlines"></div>
     <div id="tv-static"></div>
 
     <div id="mtv-credits">
-      <div id="song-artist">NIRVANA</div>
-      <div id="song-title">"SMELLS LIKE TEEN SPIRIT"</div>
-      <div id="song-album">Nevermind (1991)</div>
+      <div id="song-artist"></div>
+      <div id="song-title"></div>
+      <div id="song-album"></div>
     </div>
 
     <div id="channel-bug">ROCK-TV</div>
   </div>
 
   <div class="controls-bar">
-    <button class="btn" onclick="unmuteSound()" id="mute-btn">UNMUTE SOUND</button>
+    <button class="btn" onclick="toggleMute()" id="mute-btn">UNMUTE SOUND</button>
     <button class="btn" onclick="playNext()">CHANNEL SURF &gt;&gt;</button>
     <button class="btn" onclick="showCredits()">INFO CARD</button>
     <button class="btn" onclick="toggleCRT()" id="crt-btn">CRT MODE: ON</button>
   </div>
 
-  <div id="queue-box">ON AIR: NIRVANA - "SMELLS LIKE TEEN SPIRIT" | UP NEXT: BON JOVI - "LIVIN' ON A PRAYER"</div>
+  <div id="queue-box">TUNING LIVE BROADCAST...</div>
 
   <script>
+    // Direct HTML5 Video Streams (Zero iframes = Zero sad-smiley blocks!)
     const playlist = [
       {
-        id: "hTWKbfoikeg",
-        artist: "NIRVANA",
-        title: '"SMELLS LIKE TEEN SPIRIT"',
-        album: "Nevermind (1991)"
+        url: "https://wikimedia.org",
+        artist: "NINE INCH NAILS",
+        title: '"SOMEWHAT DAMAGED (LIVE)"',
+        album: "ROCK-TV Concert Spotlight"
       },
       {
-        id: "lDK9QqIzhwk",
-        artist: "BON JOVI",
-        title: '"LIVIN\' ON A PRAYER"',
-        album: "Slippery When Wet (1986)"
-      },
-      {
-        id: "1w7OgIMMRc4",
-        artist: "GUNS N' ROSES",
-        title: '"SWEET CHILD O\' MINE"',
-        album: "Appetite For Destruction (1987)"
-      },
-      {
-        id: "9jK-NcRmVcw",
-        artist: "EUROPE",
-        title: '"THE FINAL COUNTDOWN"',
-        album: "The Final Countdown (1986)"
-      },
-      {
-        id: "btPJPFnesV4",
-        artist: "SURVIVOR",
-        title: '"EYE OF THE TIGER"',
-        album: "Eye of the Tiger (1982)"
+        url: "https://wikimedia.org",
+        artist: "ROCK-TV TEST REEL",
+        title: '"SIGNAL CALIBRATION"',
+        album: "Broadcast Stream Check"
       }
     ];
 
     let currentIndex = 0;
-    let isMuted = true;
     let crtEnabled = true;
 
-    function loadCurrentVideo() {
-      const current = playlist[currentIndex];
-      const next = playlist[(currentIndex + 1) % playlist.length];
-      const muteParam = isMuted ? 1 : 0;
+    function loadVideo(index) {
+      const current = playlist[index];
+      const next = playlist[(index + 1) % playlist.length];
+      const video = document.getElementById('tv-screen');
 
-      document.getElementById('tv-screen').src =
-        `https://youtube.com{current.id}?autoplay=1&mute=${muteParam}&controls=0&disablekb=1&rel=0`;
+      video.src = current.url;
+      video.play();
 
       document.getElementById('song-artist').innerText = current.artist;
       document.getElementById('song-title').innerText = current.title;
@@ -221,13 +192,13 @@
     function playNext() {
       triggerStatic();
       currentIndex = (currentIndex + 1) % playlist.length;
-      loadCurrentVideo();
+      loadVideo(currentIndex);
     }
 
-    function unmuteSound() {
-      isMuted = !isMuted;
-      document.getElementById('mute-btn').innerText = isMuted ? "UNMUTE SOUND" : "MUTE SOUND";
-      loadCurrentVideo();
+    function toggleMute() {
+      const video = document.getElementById('tv-screen');
+      video.muted = !video.muted;
+      document.getElementById('mute-btn').innerText = video.muted ? "UNMUTE SOUND" : "MUTE SOUND";
     }
 
     function triggerStatic() {
@@ -248,7 +219,7 @@
       document.getElementById('crt-btn').innerText = crtEnabled ? 'CRT MODE: ON' : 'CRT MODE: OFF';
     }
 
-    window.onload = showCredits;
+    window.onload = () => loadVideo(0);
   </script>
 
 </body>
