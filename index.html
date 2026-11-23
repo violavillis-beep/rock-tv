@@ -18,6 +18,7 @@
       color: #888;
       overflow: hidden;
     }
+
     #tv-frame {
       position: relative;
       width: 96vw;
@@ -25,15 +26,19 @@
       max-width: 1600px;
       border: 3px solid #222;
       border-radius: 8px;
+      box-shadow: 0 0 60px rgba(255, 255, 255, 0.06);
       background: #000;
       overflow: hidden;
     }
+
+    /* Direct video tag with NO controls = true unskippable Live TV */
     #tv-screen {
       width: 100%;
       height: 100%;
       object-fit: contain;
       pointer-events: none;
     }
+
     #crt-scanlines {
       position: absolute;
       inset: 0;
@@ -42,6 +47,37 @@
       pointer-events: none;
       z-index: 3;
     }
+
+    #tv-static {
+      position: absolute;
+      inset: 0;
+      background: repeating-radial-gradient(#000 0 0.0001%, #fff 0 0.0002%) 50% 0/2500px 2500px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 4;
+      transition: opacity 0.15s ease;
+    }
+    #tv-static.flash { opacity: 0.8; }
+
+    #mtv-credits {
+      position: absolute;
+      bottom: 50px;
+      left: 35px;
+      color: white;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.2;
+      text-shadow: 2px 2px 0px #000, -1px -1px 0px #000;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+      z-index: 5;
+    }
+    #mtv-credits.visible { opacity: 1; }
+    #song-artist { font-size: 24px; }
+    #song-title { font-size: 21px; }
+    #song-album { font-size: 17px; font-weight: bold; }
+
     #channel-bug {
       position: absolute;
       bottom: 45px;
@@ -52,24 +88,18 @@
       font-weight: bold;
       letter-spacing: 2px;
       pointer-events: none;
+      text-shadow: 2px 2px 4px #000;
       z-index: 5;
     }
-    #status-msg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: 'Courier New', monospace;
-      color: #00ff88;
-      font-size: 16px;
-      z-index: 4;
-      pointer-events: none;
-    }
+
     .controls-bar {
       margin-top: 12px;
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
+
     .btn {
       padding: 10px 18px;
       background-color: #000000;
@@ -78,34 +108,117 @@
       font-family: 'Courier New', monospace;
       font-size: 14px;
       font-weight: bold;
+      letter-spacing: 1px;
       cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s;
     }
-    .btn:hover { border-color: #ffffff; }
+    .btn:hover {
+      background-color: #222222;
+      border-color: #ffffff;
+    }
+
+    #queue-box {
+      margin-top: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
   <div id="tv-frame">
-    <div id="status-msg">TUNING SIGNAL...</div>
-    <video id="tv-screen" autoplay muted loop playsinline
-      onplaying="document.getElementById('status-msg').style.display='none'"
-      onerror="document.getElementById('status-msg').innerText='SIGNAL BLOCKED BY NETWORK/BROWSER'">
-      <source src="https://mozilla.net" type="video/mp4">
-    </video>
+    <video id="tv-screen" autoplay muted playsinline onended="playNext()"></video>
     <div id="crt-scanlines"></div>
+    <div id="tv-static"></div>
+
+    <div id="mtv-credits">
+      <div id="song-artist"></div>
+      <div id="song-title"></div>
+      <div id="song-album"></div>
+    </div>
+
     <div id="channel-bug">ROCK-TV</div>
   </div>
 
   <div class="controls-bar">
     <button class="btn" onclick="toggleMute()" id="mute-btn">UNMUTE SOUND</button>
+    <button class="btn" onclick="playNext()">CHANNEL SURF &gt;&gt;</button>
+    <button class="btn" onclick="showCredits()">INFO CARD</button>
+    <button class="btn" onclick="toggleCRT()" id="crt-btn">CRT MODE: ON</button>
   </div>
 
+  <div id="queue-box">TUNING SIGNAL...</div>
+
   <script>
-    function toggleMute() {
-      const v = document.getElementById('tv-screen');
-      v.muted = !v.muted;
-      document.getElementById('mute-btn').innerText = v.muted ? "UNMUTE SOUND" : "MUTE SOUND";
+    const playlist = [
+      {
+        url: "https://mozilla.net",
+        artist: "SIGNAL TEST 01",
+        title: '"DIRECT STREAM CHECK"',
+        album: "ROCK-TV Broadcast Test"
+      },
+      {
+        url: "https://googleapis.com",
+        artist: "SIGNAL TEST 02",
+        title: '"SECONDARY STREAM CHECK"',
+        album: "ROCK-TV Broadcast Test"
+      }
+    ];
+
+    let currentIndex = 0;
+    let crtEnabled = true;
+
+    function loadVideo(index) {
+      const current = playlist[index];
+      const next = playlist[(index + 1) % playlist.length];
+      const video = document.getElementById('tv-screen');
+
+      video.src = current.url;
+      video.play();
+
+      document.getElementById('song-artist').innerText = current.artist;
+      document.getElementById('song-title').innerText = current.title;
+      document.getElementById('song-album').innerText = current.album;
+
+      document.getElementById('queue-box').innerHTML =
+        `<b>ON AIR:</b> ${current.artist} - ${current.title} &nbsp;|&nbsp; <b>UP NEXT:</b> ${next.artist} - ${next.title}`;
+
+      showCredits();
     }
+
+    function playNext() {
+      triggerStatic();
+      currentIndex = (currentIndex + 1) % playlist.length;
+      loadVideo(currentIndex);
+    }
+
+    function toggleMute() {
+      const video = document.getElementById('tv-screen');
+      video.muted = !video.muted;
+      document.getElementById('mute-btn').innerText = video.muted ? "UNMUTE SOUND" : "MUTE SOUND";
+    }
+
+    function triggerStatic() {
+      const staticScreen = document.getElementById('tv-static');
+      staticScreen.classList.add('flash');
+      setTimeout(() => staticScreen.classList.remove('flash'), 300);
+    }
+
+    function showCredits() {
+      const credits = document.getElementById('mtv-credits');
+      credits.classList.add('visible');
+      setTimeout(() => credits.classList.remove('visible'), 7000);
+    }
+
+    function toggleCRT() {
+      crtEnabled = !crtEnabled;
+      document.getElementById('crt-scanlines').style.display = crtEnabled ? 'block' : 'none';
+      document.getElementById('crt-btn').innerText = crtEnabled ? 'CRT MODE: ON' : 'CRT MODE: OFF';
+    }
+
+    window.onload = () => loadVideo(0);
   </script>
 
 </body>
