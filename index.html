@@ -31,20 +31,10 @@
       overflow: hidden;
     }
 
-    /* Direct YouTube iframe zoomed slightly to hide YouTube's top title bar */
     #tv-screen {
       width: 100%;
-      height: 114%;
-      margin-top: -4%;
+      height: 100%;
       border: none;
-    }
-
-    /* Invisible glass shield: stops viewers from pausing or scrubbing */
-    #tv-shield {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      background: transparent;
     }
 
     #crt-scanlines {
@@ -69,7 +59,7 @@
 
     #mtv-credits {
       position: absolute;
-      bottom: 50px;
+      bottom: 65px;
       left: 35px;
       color: white;
       font-weight: 900;
@@ -88,7 +78,7 @@
 
     #channel-bug {
       position: absolute;
-      bottom: 45px;
+      bottom: 60px;
       right: 30px;
       color: rgba(255, 255, 255, 0.85);
       font-family: 'Courier New', monospace;
@@ -138,11 +128,11 @@
 
   <div id="tv-frame">
     <iframe id="tv-screen"
-      src="https://youtube.com"
+      src="https://youtube-nocookie.com"
+      referrerpolicy="strict-origin-when-cross-origin"
       allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
-    <div id="tv-shield"></div>
     <div id="crt-scanlines"></div>
     <div id="tv-static"></div>
 
@@ -208,7 +198,7 @@
       const muteParam = isMuted ? 1 : 0;
 
       document.getElementById('tv-screen').src =
-        `https://youtube.com{current.id}?autoplay=1&mute=${muteParam}&controls=0&disablekb=1&rel=0`;
+        `https://youtube-nocookie.com{current.id}?autoplay=1&mute=${muteParam}&controls=0&disablekb=1&rel=0`;
 
       document.getElementById('song-artist').innerText = current.artist;
       document.getElementById('song-title').innerText = current.title;
@@ -255,6 +245,5 @@
 
 </body>
 </html>
-
 
 
